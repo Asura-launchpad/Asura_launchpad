@@ -1,0 +1,149 @@
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0);
+  border-bottom: 1px solid #3D3D3D;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  
+  .navWrapper {
+    margin: 0 auto;
+    padding: 4px 24px;
+    padding-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+
+    .logo {
+      flex: 0 0 auto;
+      cursor: pointer;
+      
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+
+    .searchBar {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      flex: 1;
+      max-width: 600px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+
+      .searchWrapper {
+        width: 100%;
+        max-width: 424px;
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid #3D3D3D;
+        border-radius: 24px;
+        padding: 4px 6px;
+        height: 48px;
+
+
+        .searchIcon {
+          width: 18px;
+          height: 18px;
+          margin-right: 8px;
+          padding-top: 2px;
+          margin-left: 6px;
+        }
+
+        .searchInput {
+          width: 100%;
+          background: transparent;
+          border: none;
+          color: #fff;
+          font-size: 14px;
+          outline: none;
+          padding: 4px 0;
+
+          &::placeholder {
+            color: #8E8E93;
+          }
+        }
+        .shortcut {
+          min-width:32px;
+          height: 32px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid #3D3D3D;
+          border-radius: 24px;
+          color: #8E8E93;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        //   margin-left: 8px;
+        }
+      }
+    }
+
+    .walletConnect {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+@media screen and (max-width: 820px) {
+  .nav {
+    .navWrapper {
+      padding: 8px 14px;
+      .searchBar {
+        position: static;
+        left: auto;
+        transform: none;
+        margin-left: auto;
+        width: 48px;
+        background: transparent;
+        border: 0;
+        .searchWrapper {
+          .searchInput {
+            display: none;
+          }
+          .shortcut {
+            display: none;
+          }
+          .searchIcon {
+            width: 24px;
+            height: 24px;
+            margin: 0px;
+          }
+          width: 48px;
+          padding: 0;
+          justify-content: center;
+          background: transparent;
+          margin-right: 0;
+          position: absolute;
+          right: 16px;
+          border: 0;
+        }
+      }
+      .walletConnect {
+        display: none;
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 820px) {
+  .nav {
+    .navWrapper {
+      img {
+        width: 138px;
+        height: auto;
+      }
+    }
+  }
+}

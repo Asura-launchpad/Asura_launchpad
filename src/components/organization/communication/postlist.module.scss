@@ -1,0 +1,10 @@
+.postList {
+  padding: 0 16px;
+}
+
+@media screen and (max-width: 890px) {
+  .postList {
+    padding: 0px;
+    gap: 8px;
+    }
+}

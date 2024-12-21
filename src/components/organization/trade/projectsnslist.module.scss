@@ -1,0 +1,52 @@
+.snsList {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  // margin-top: 16px;
+}
+
+.snsLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  // background: rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #3d3d3d;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-in-out forwards;
+
+  @for $i from 1 through 5 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.1}s;
+    }
+  }
+
+  img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

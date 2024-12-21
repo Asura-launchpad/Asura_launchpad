@@ -1,0 +1,110 @@
+.profileContainer {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #1A1A1A;
+  border: 1px solid #3d3d3d;
+  
+  .coverImage {
+    width: 100%;
+    height: 120px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: linear-gradient(to bottom, transparent, rgba(26, 26, 26, 0.8));
+    }
+  }
+
+  .profileContent {
+    padding: 8px;
+    
+    .profileImage {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      border: 3px solid #1A1A1A;
+      margin-top: -32px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .info {
+      margin: 12px 0;
+      
+      .name {
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 6px;
+      }
+      
+      .description {
+        font-size: 12px;
+        color: #999;
+        line-height: 1.4;
+        margin: 0px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+    }
+    
+    .actions {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      
+      button {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        
+        &.ipaButton {
+          max-width: 80px;
+          background: #242424;
+          color: #FFE600;
+          border: 1px solid #FFE600;
+          border-radius: 24px;
+          
+          &:hover {
+            background: rgba(255, 230, 0, 0.1);
+          }
+        }
+        
+        &.diveButton {
+          max-width: 180px;
+          background: #FFE600;
+          color: #000;
+          border: none;
+          border-radius: 24px;
+          
+          &:hover {
+            background: #E6CF00;
+          }
+
+          &::after {
+            content: '►';
+            margin-left: 4px;
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+}

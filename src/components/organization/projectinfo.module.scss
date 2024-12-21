@@ -1,0 +1,224 @@
+.container {
+  width: 100%;
+  padding: 12px 0px;
+  background: var(--color-background-dark);
+  border-radius: 12px;
+}
+
+.infoWrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.projectIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #ffeb3b;
+}
+
+.infoContent {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 22px;
+}
+.nameSections {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.projectInfoContainer {
+  display: flex;
+  flex-direction: row;
+  // align-items: center;
+  gap: 4px;
+}
+
+
+.nameSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+
+  h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-white);
+  }
+
+  .tag {
+    // padding: 2px 8px;
+    // background: rgba(255, 255, 255, 0.1);
+    // border-radius: 4px;
+    font-size: 14px;
+    color: var(--color-main-yellow);
+    font-family: 'LINESeedSans';
+  }
+}
+
+.statsSection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+//   max-width: 400px;
+}
+
+.tagimg {
+  padding: 2px 6px;
+  background: #FFE600;
+  border-radius: 100px;
+  font-size: 8px;
+  font-weight: 600;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #000000;
+    border-radius: 50%;
+  }
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  max-width: 80px;
+
+  span {
+    font-size: 12px;
+    color: #8E8E93;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--color-white);
+    font-weight: 500;
+    word-break: break-all;
+    line-height: 1.4;
+    margin: 0;
+  }
+}
+
+.dateHover {
+  cursor: help;
+  position: relative;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+  }
+}
+
+.tooltip {
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 100;
+  white-space: nowrap;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 0 6px 6px 6px;
+    border-style: solid;
+    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
+  }
+}
+.contractAddress {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  
+  &:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+@media screen and (max-width: 890px) {
+  .container {
+    .infoContent {
+      gap: 12px;
+      margin-bottom: 8px;
+
+      .nameSection {
+        margin-bottom: 0px;
+        h2 {
+          font-size: 0.5em;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          margin-bottom: 0px;
+        }
+        .tag {
+          min-width: 32px;
+          font-size: 0.5em;
+          margin-bottom: 0px;
+        }
+        .tagimg {
+          font-size: 0.5em;
+          gap: 2px;
+          margin-bottom: 0px;
+        }
+      }
+      
+      .statsSection {
+        margin-bottom: 0px;
+        .stat {
+          margin-bottom: 8px;
+          span {
+            font-size: 0.5em;
+            margin-bottom: 0px;
+          }
+          p {
+            font-size: 0.5em;
+            margin-bottom: 0px;
+          }
+        }
+      }
+    }
+  }
+}
+
+.statLabel {
+  display: none;
+  
+  &.desktop {
+    display: block;
+    &::after {
+      content: 'Market Cap';
+    }
+    @media (max-width: 890px) {
+      display: none;
+    }
+  }
+  
+  &.mobile {
+    display: none;
+    &::after {
+      content: 'M.C';
+    }
+    @media (max-width: 890px) {
+      display: block;
+    }
+  }
+}

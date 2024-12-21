@@ -1,0 +1,117 @@
+.trendListContainer {
+  border-radius: 8px;
+  border: 1px solid #3d3d3d;
+  padding: 8px 16px;
+}
+.trendHeader {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.trendTitle {
+  color: #FFE600;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding-top: 5px;
+}
+
+
+.wrapper {
+  width: 100%;
+  max-width: 386px;
+  height: auto;
+  color: #FFE600;
+  font-family: 'LINE Seed Sans CJK';
+  font-size: 18px;
+  gap: 8px;
+}
+
+.trendItem {
+  display: flex;
+  align-items: center;
+  padding: 10px 2px;
+  border-bottom: 1px solid #2a2a2a;
+  opacity: 0;
+  animation: itemFadeIn 0.3s ease forwards;
+  transition: all 0.2s ease-in-out;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    transform: translateX(4px);
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+
+  @for $i from 1 through 11 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.03}s;
+    }
+  }
+}
+
+@keyframes itemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rank {
+  width: 12px;
+  font-size: 14px;
+  color: #ffffff;
+  margin-right: 4px;
+}
+
+.nameContainer {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #333;
+  margin-right: 8px;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+.nameInfo {
+  display: flex;
+  gap: 4px;
+}
+
+.name,
+.ticker,
+.price {
+  font-size: 14px;
+}
+
+.name,
+.price {
+  color: #ffffff;
+}
+
+.ticker {
+  color: #888888;
+}
+
+.price {
+  text-align: right;
+  min-width: 80px;
+}

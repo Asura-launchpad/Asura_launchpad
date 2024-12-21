@@ -1,0 +1,68 @@
+.container {
+  width: 100%;
+  border-radius: 12px;
+  background: #1A1A1A;
+  border: 1px solid #3d3d3d;
+}
+
+.addressInfo {
+  // margin-bottom: 24px;
+
+  h2 {
+    font-size: 9px;
+    font-weight: 700;
+    // margin-bottom: 12px;
+    font-family: var(--font-line-seed-sans-kr);
+    color: #FFE600;
+  }
+}
+
+.addressWrapper {
+  display: flex;
+  align-items: center;
+  padding: 8px 8px;
+  // background: #000;
+  // border: 1px solid #3d3d3d;
+  border-radius: 4px;
+
+  p {
+    padding-left: 4px;
+    flex: 1;
+    font-size: 0.4em;
+    color: #fff;
+    word-break: break-all;
+  }
+}
+
+.copyButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: #FFE600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  color: #FFE600;
+  border-radius: 4px;
+
+  &:hover {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.tradeSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  
+  @media (max-width: 768px) {
+    gap: 16px;
+  }
+}

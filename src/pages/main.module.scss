@@ -1,0 +1,78 @@
+.container {
+    min-height: 100vh;
+    color: var(--color-white);
+    background-color: var(--color-background-dark);
+    overflow: hidden; /* 스크롤바 제거 */
+  }
+
+.agentList {
+  width: 100%;
+  padding: 0px;
+  padding-bottom: 0;
+  max-width: 1575px;
+  margin: 0 auto;
+  overflow: hidden; /* 스크롤바 제거 */
+
+  .agentListTitle {
+    margin-top: 12px;
+    max-width: 1575px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font-line-seed-sans-kr);
+    
+    img {
+      margin-top: 12px;
+      width: 24px;
+      height: 24px;
+    }
+
+    span {
+      color: white;
+    }
+  }
+}
+@media (max-width: 599px) {
+  .agentList {
+    padding: 0 16px;
+    max-width: 599px;
+
+    .agentListTitle {
+      font-size: 12px;
+      margin-top: 8px;
+      
+      img {
+        width: 20px;
+        height: 20px;
+        margin-top: 8px;
+      }
+    }
+  }
+}
+
+@media (min-width: 600px) and (max-width: 830px) {
+  .agentList {
+    padding: 0 20px;
+    max-width: 600px;
+
+    .agentListTitle {
+      font-size: 13px;
+      margin-top: 10px;
+    }
+  }
+}
+
+@media (min-width: 831px) and (max-width: 1199px) {
+  .agentList {
+    padding: 0 24px;
+    max-width: 900px;
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1575px) {
+  .agentList {
+    max-width: 1140px;
+  }
+}
