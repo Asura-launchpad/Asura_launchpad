@@ -39,6 +39,19 @@
       justify-content: center;
       align-items: center;
 
+      .searchResultWrapper {
+        position: fixed;
+        top: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 424px;
+        background: rgba(20, 20, 20, 0.95);
+        border: 1px solid #3D3D3D;
+        border-radius: 12px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 1000;
+      }
 
       .searchWrapper {
         width: 100%;

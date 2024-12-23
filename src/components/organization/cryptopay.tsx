@@ -1,8 +1,9 @@
-import { Button } from '../cell/button';
+import { Button } from '@/components/cell/button';
 import React from 'react';
 import styles from './cryptopay.module.scss';
-import { useAccount } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import Image from 'next/image';
 
 interface PaymentProps {
   amount: number;
@@ -17,18 +18,7 @@ export const CryptoPay: React.FC<PaymentProps> = ({
   onPaymentCancel,
   disabled
 }) => {
-  const { isConnected } = useAccount();
-  const { openConnectModal } = useConnectModal();
-
-  const handleClick = () => {
-    if (!isConnected) {
-      if (openConnectModal) {
-        openConnectModal();
-      }
-      return;
-    }
-    onPaymentComplete();
-  };
+  const { connected } = useWallet();
 
   return (
     <div className={styles.container}>
@@ -37,21 +27,30 @@ export const CryptoPay: React.FC<PaymentProps> = ({
           <div>Total Cost</div>
           <div className={styles.amount}>
             {amount.toFixed(2)}
-            <span className={styles.symbol}>SYMBOL</span>
+            <span className={styles.symbol}>SOL</span>
           </div>
         </div>
         
         <div className={styles.buttonGroup}>
-          <Button 
-            variant="primary"
-            size="large"
-            onClick={handleClick}
-            icon={<img src="/snssvg/agenticon32x32.svg" alt="agent" width={32} height={32} />}
-            fullWidth
-            disabled={disabled}
-          >
-            {!isConnected ? 'CONNECT WALLET' : 'GENESIS AI AGENT'}
-          </Button>
+          {!connected ? (
+            <WalletMultiButton className={styles.connectButton}>
+              <span className={styles.walletIcons}>
+                <Image src="/snssvg/agenticon32x32.svg" alt="agent" width={32} height={32} />
+              </span>
+              <div>CONNECT WALLET</div>
+            </WalletMultiButton>
+          ) : (
+            <Button 
+              variant="primary"
+              size="large"
+              onClick={onPaymentComplete}
+              icon={<img src="/snssvg/agenticon32x32.svg" alt="agent" width={32} height={32} />}
+              fullWidth
+              disabled={disabled}
+            >
+              GENESIS AI AGENT
+            </Button>
+          )}
         </div>
       </div>
     </div>

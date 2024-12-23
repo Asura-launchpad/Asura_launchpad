@@ -1,215 +1,121 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import styles from './tradebox.module.scss';
 import Image from 'next/image';
-import { ethers } from 'ethers';
-import { useAccount } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import BONDING_CURVE_ABI from '../../../abi/bonding_curve_abi.json';
-import { BondingCurveContract } from '../../../contract/bondingCurve';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { pumpDotFun } from '@/contract/pumpdotfun';
 
-// 토큰 정보를 위한 인터페이스 정의
 interface TokenInfo {
-  symbol: string;    // 토큰 심볼 (예: SOL, KAIA)
-  imageUrl: string;  // 토큰 이미지 URL
+  symbol: string;
+  imageUrl: string;
 }
 
-// TradeBox 컴포넌트의 props 인터페이스 정의
 interface TradeBoxProps {
-  onTrade: (type: 'buy' | 'sell', amount: number) => void;  // 거래 실행 콜백
-  contractAddress: string;  // 스마트 컨트랙트 주소
-  price?: number;          // 현재 가격
-  volume?: number;         // 거래량
-  change?: number;         // 가격 변동률
-  mainToken: TokenInfo;    // 메인 토큰 정보 (예: SOL)
-  memeToken: TokenInfo;    // 밈 토큰 정보 (예: KAIA)
+  contractAddress: string;
+  price?: number;
+  volume?: number;
+  change?: number;
+  mainToken: TokenInfo;
+  memeToken: TokenInfo;
 }
 
-// TradeBox 메인 컴포넌트
-const TradeBox = ({ 
-  onTrade, 
-  contractAddress, 
-  price = 0, 
-  volume = 0, 
+const TradeBox = ({
+  contractAddress,
+  price = 0,
+  volume = 0,
   change = 0,
   mainToken,
   memeToken
 }: TradeBoxProps) => {
-  const { isConnected } = useAccount();
-  const { openConnectModal } = useConnectModal();
-
-  // 상태 관리
-  const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');  // 거래 타입 (매수/매도)
-  const [amount, setAmount] = useState<string>('0.0000');             // 거래 수량
-  const [estimatedTCK, setEstimatedTCK] = useState<string>('0.0000'); // 예상 토큰 수량
-  const [currentPrice, setCurrentPrice] = useState<string>('0');
-  const [contract, setContract] = useState<ethers.Contract | null>(null);
+  const { publicKey, signTransaction } = useWallet();
+  const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
+  const [amount, setAmount] = useState<string>('0.0000');
+  const [estimatedTCK, setEstimatedTCK] = useState<string>('0.0000');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 지갑 연결 상태 변경 감지
-  useEffect(() => {
-    if (isConnected) {
-      initializeContract();
-      setError(null); // 에러 메시지 초기화
-    } else {
-      setContract(null);
-      setAmount('0.0000');
-      setEstimatedTCK('0.0000');
-      setError(null);
-    }
-  }, [isConnected, contractAddress]);
-
-  const initializeContract = async () => {
-    if (typeof window.ethereum !== 'undefined' && contractAddress) {
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const bondingContract = new ethers.Contract(
-          contractAddress,
-          BONDING_CURVE_ABI,
-          signer
-        );
-        setContract(bondingContract);
-        
-        // 토큰 정보 및 거래 가능 여부 확인
-        const [tokenInfo] = await Promise.all([
-          bondingContract.tokenInfo(),
-        ]);
-      } catch (error) {
-        console.error('컨트랙트 초기화 실패:', error);
-        setError('컨트랙트 연결에 실패했습니다');
-      }
-    }
-  };
-
-  // 지갑 연결 체크 함수
-  const checkWalletConnection = () => {
-    if (!isConnected) {
-      openConnectModal?.();
-      setError(null); // 연결 모달 열 때 에러 메시지 제거
-      return false;
-    }
-    return true;
-  };
-
-  // 거래 타입 변경 핸들러
-  const handleTypeChange = (type: 'buy' | 'sell') => {
-    setTradeType(type);
-    setAmount('0.0000');
-    setEstimatedTCK('0.0000');
-  };
-
-  // 수량 변경 핸들러
-  const handleAmountChange = async (value: string) => {
-    setAmount(value);
-    setError(null);
-    
-    if (!isConnected) {
+  const calculateEstimate = async (inputAmount: string) => {
+    if (!inputAmount || parseFloat(inputAmount) <= 0) {
       setEstimatedTCK('0.0000');
       return;
     }
-    
-    if (value !== '' && parseFloat(value) > 0) {
-      try {
-        setLoading(true);
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const bondingCurve = new BondingCurveContract(contractAddress, provider);
-        const { estimatedAmount } = await bondingCurve.quoteSwapAmount(value, tradeType === 'buy');
-        setEstimatedTCK(estimatedAmount);
-      } catch (error) {
-        console.error('예상 수량 계산 실패:', error);
-        setEstimatedTCK('0.0000');
-      } finally {
-        setLoading(false);
-      }
-    } else {
+
+    try {
+      const quote = await pumpDotFun.getTradeQuote(
+        contractAddress,
+        tradeType,
+        parseFloat(inputAmount),
+        true
+      );
+      setEstimatedTCK(quote.estimatedAmount.toFixed(4));
+    } catch (error) {
+      console.error('Quote error:', error);
       setEstimatedTCK('0.0000');
     }
   };
 
-  // 빠른 수량 선택 핸들러
+  const handleAmountChange = (value: string) => {
+    setAmount(value);
+    setError(null);
+    calculateEstimate(value);
+  };
+
   const handleQuickAmount = async (value: number) => {
-    if (!checkWalletConnection()) return;
+    if (!publicKey) {
+      setError('Please connect your wallet');
+      return;
+    }
 
     if (tradeType === 'buy') {
-      const newAmount = (parseFloat(amount) + value).toFixed(4);
+      const newAmount = value.toFixed(4);
       handleAmountChange(newAmount);
       return;
     }
 
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const address = await signer.getAddress();
-      
-      const bondingCurve = new BondingCurveContract(contractAddress, provider);
-      const tokenInfo = await bondingCurve.getTokenInfo();
-      
-      const tokenContract = new ethers.Contract(
-        tokenInfo.tokenAddress,
-        ['function balanceOf(address) view returns (uint256)'],
-        signer
-      );
-      
-      const balance = await tokenContract.balanceOf(address);
-      const balanceInEther = ethers.utils.formatEther(balance);
-      
-      const sellAmount = (parseFloat(balanceInEther) * (value / 100)).toFixed(4);
+      const balance = await pumpDotFun.getTokenBalance(contractAddress, publicKey.toString());
+      const sellAmount = (balance * (value / 100)).toFixed(4);
       handleAmountChange(sellAmount);
-      
-      console.log('판매 정보:', {
-        보유량: balanceInEther,
-        판매비율: value + '%',
-        판매수량: sellAmount
-      });
     } catch (error) {
-      console.error('보유량 확인 실패:', error);
-      setError('보유량 확인에 실패했습니다');
+      console.error('Balance check failed:', error);
+      setError('Failed to check balance');
     }
   };
 
-  // 리셋 핸들러
-  const handleReset = () => {
-    setAmount('0.0000');
-    setEstimatedTCK('0.0000');
-  };
-
-  // 거래 실행 핸들러
   const handleTrade = async () => {
-    if (!checkWalletConnection()) return;
+    if (!publicKey || !signTransaction) {
+      setError('Please connect your wallet');
+      return;
+    }
 
     try {
-      if (!contractAddress || !amount || parseFloat(amount) <= 0) {
-        setError('유효한 수량을 입력해주세요');
-        return;
-      }
-
       setLoading(true);
       setError(null);
 
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const bondingCurve = new BondingCurveContract(contractAddress, provider);
-      
-      let receipt;
-      if (tradeType === 'buy') {
-        receipt = await bondingCurve.buyTokens(amount);
-      } else {
-        receipt = await bondingCurve.sellTokens(amount);
-      }
+      const tx = await pumpDotFun.createTradeTransaction(
+        publicKey.toString(),
+        contractAddress,
+        tradeType,
+        parseFloat(amount),
+        {
+          denominatedInSol: true,
+          slippage: 5,
+          priorityFee: 0.00001,
+          pool: 'pump'
+        }
+      );
 
+      const signedTx = await signTransaction(tx);
+      const signature = await pumpDotFun.sendTransaction(signedTx);
+
+      console.log("Transaction successful:", signature);
       setAmount('0.0000');
       setEstimatedTCK('0.0000');
-      onTrade(tradeType, parseFloat(amount));
-
+      
       window.dispatchEvent(new Event('updateProgress'));
-
     } catch (error: any) {
-      if (error.code === 4001) {
-        setError(null);
-      } else {
-        console.error('거래 실패:', error);
-        setError(error.message || '거래 처리 중 오류가 발생했습니다');
-      }
+      console.error('Trade error:', error);
+      setError(error.message || 'Trade failed');
     } finally {
       setLoading(false);
     }
@@ -217,31 +123,29 @@ const TradeBox = ({
 
   return (
     <div className={styles.tradeBox}>
-      {/* 거래 타입 선택 섹션 */}
       <div className={styles.tradeTypeSelector}>
         <div 
           className={`${styles.typeButton} ${tradeType === 'buy' ? styles.active : ''}`}
-          onClick={() => handleTypeChange('buy')}
-          data-type="buy"
+          onClick={() => setTradeType('buy')}
         >
           BUY
         </div>
         <div 
           className={`${styles.typeButton} ${tradeType === 'sell' ? styles.active : ''}`}
-          onClick={() => handleTypeChange('sell')}
-          data-type="sell"
+          onClick={() => setTradeType('sell')}
         >
           SELL
         </div>
       </div>
+
       <div className={styles.tradeContent}>
-        {/* 수량 입력 섹션 */}
         <div className={styles.inputSection}>
           <input
             type="number"
             value={amount}
             onChange={(e) => handleAmountChange(e.target.value)}
             className={styles.amountInput}
+            disabled={loading}
           />
           <div className={styles.currencyWrapper}>
             <Image 
@@ -256,9 +160,8 @@ const TradeBox = ({
           </div>
         </div>
 
-        {/* 빠른 수량 선택 버튼 */}
         <div className={styles.quickAmountButtons}>
-          <button onClick={handleReset}>RESET</button>
+          <button onClick={() => handleAmountChange('0.0000')}>RESET</button>
           {tradeType === 'buy' ? (
             <>
               <button onClick={() => handleQuickAmount(0.1)}>0.1</button>
@@ -273,8 +176,9 @@ const TradeBox = ({
             </>
           )}
         </div>
+
         <div className={styles.crossline}></div>
-        {/* 예상 수량 표시 섹션 */}
+
         <div className={styles.estimatedAmounts}>
           <span>{estimatedTCK}</span>
           <div className={styles.currencyWrapperbottom}>
@@ -290,17 +194,19 @@ const TradeBox = ({
           </div>
         </div>
 
-        {/* 거래 실행 버튼 */}
-        <button 
-          className={styles.tradeButton}
-          onClick={handleTrade}
-          disabled={loading || !!error}
-          data-type={tradeType}
-        >
-          {loading ? 'TX Loading...' : 
-           !isConnected ? 'CONNECT WALLET' :
-           tradeType === 'buy' ? 'BUY THE DEEP' : 'SELL THE TOP'}
-        </button>
+        {!publicKey ? (
+          <WalletMultiButton className={styles.tradeButton} />
+        ) : (
+          <button 
+            className={styles.tradeButton}
+            onClick={handleTrade}
+            disabled={loading || !!error}
+            data-type={tradeType}
+          >
+            {loading ? 'TX Loading...' : 
+             tradeType === 'buy' ? 'BUY THE DEEP' : 'SELL THE TOP'}
+          </button>
+        )}
       </div>
       
       {error && (

@@ -147,3 +147,36 @@ export const getTrendingTokens = async (): Promise<TrendingTokensResponse> => {
     throw new Error('트렌딩 토큰 목록 조회에 실패했습니다.');
   }
 };
+
+
+interface SearchAgentTokenResponse {
+  count: number;
+  results: {
+    persona: AgentPersonaResponse['persona'];
+    agent_token: AgentPersonaResponse['agent_token'];
+  }[];
+}
+
+
+export const searchAgentToken = async (query: string): Promise<SearchAgentTokenResponse> => {
+  try {
+    if (!query) {
+      throw new Error('검색어를 입력해주세요.');
+    }
+
+    const response = await api.get('/api/persona/search-agent-token/', {
+      params: { query }
+    });
+    console.log('[searchAgentToken] 응답:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('[searchAgentToken] 에러 발생:', error);
+    if (error.response?.status === 400) {
+      throw new Error('검색어를 입력해주세요.');
+    }
+    if (error.response?.status === 500) {
+      throw new Error('에이전트 토큰 검색 중 오류가 발생했습니다.');
+    }
+    throw new Error('에이전트 토큰 검색에 실패했습니다.');
+  }
+};

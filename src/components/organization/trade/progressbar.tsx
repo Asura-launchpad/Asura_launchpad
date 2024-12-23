@@ -1,45 +1,34 @@
 import { useState, useEffect } from 'react';
 import styles from './progressbar.module.scss';
-import { ethers } from 'ethers';
-import { BondingCurveContract } from '../../../contract/bondingCurve';
-import { BondingCurveState } from '../../../contract/BondingCurveState';
-import { useAccount } from 'wagmi';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { pumpDotFun } from '@/contract/pumpdotfun';
 
 const ProgressBar = ({ bondingAddress }: { bondingAddress: string }) => {
-  const { isConnected } = useAccount();
+  const { publicKey } = useWallet();
   const [state, setState] = useState({
     progress: 0,
     total: 800000000
   });
 
   useEffect(() => {
-    if (!bondingAddress || !ethers.utils.isAddress(bondingAddress)) {
+    if (!bondingAddress) {
       console.error('유효하지 않은 컨트랙트 주소:', bondingAddress);
       return;
     }
 
-    let provider;
-    if (typeof window !== 'undefined' && window.ethereum) {
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-    } else {
-      provider = new ethers.providers.JsonRpcProvider("https://mainnet.base.org");
-    }
-
-    const bondingContract = new BondingCurveContract(bondingAddress, provider);
-    const bondingState = new BondingCurveState(bondingContract);
-
     const updateProgress = async () => {
       try {
-        const progress = await bondingState.getBondingCurveProgress();
-        setState(progress);
+        const tokenInfo = await pumpDotFun.getTokenInfo(bondingAddress);
+        setState({
+          progress: tokenInfo.currentSupply || 0,
+          total: tokenInfo.maxSupply || 800000000
+        });
       } catch (error) {
         console.error('본딩커브 상태 조회 실패:', error);
       }
     };
 
-    if (isConnected) {
-      updateProgress();
-    }
+    updateProgress();
 
     const handleUpdateProgress = () => {
       updateProgress();
@@ -47,17 +36,14 @@ const ProgressBar = ({ bondingAddress }: { bondingAddress: string }) => {
 
     window.addEventListener('updateProgress', handleUpdateProgress);
 
-    if (window.ethereum) {
-      bondingContract.onSwap(updateProgress);
-    }
+    // 10초마다 업데이트
+    const interval = setInterval(updateProgress, 10000);
 
     return () => {
       window.removeEventListener('updateProgress', handleUpdateProgress);
-      if (window.ethereum) {
-        bondingContract.removeSwapListener(updateProgress);
-      }
+      clearInterval(interval);
     };
-  }, [bondingAddress, isConnected]);
+  }, [bondingAddress]);
 
   const percentage = (state.progress / state.total) * 100;
 

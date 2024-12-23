@@ -156,9 +156,6 @@ const ContractAddressPage = () => {
             <div className={styles.lines}></div>
 
             <TradeBox 
-              onTrade={(type, amount) => {
-                console.log(`${type} ${amount}`);
-              }}
               contractAddress={projectData.bondingCurveAddress || ''}
               price={0}
               volume={0} 
@@ -233,7 +230,7 @@ const ContractAddressPage = () => {
                     profileImg: "/default_cover.png",
                     username: "사용자", 
                     clientName: "Comment",
-                    post: "첫 번째 댓글입���다.",
+                    post: "첫 번째 댓글입니다.",
                     date: "2024-01-01"
                   },
                   {
@@ -357,10 +354,6 @@ const ContractAddressPage = () => {
 
                 <div className="trade-section">
                   <TradeBox 
-                    onTrade={(type, amount) => {
-                      // 거래 로직 구현 필요
-                      console.log(`${type} ${amount}`);
-                    }}
                     contractAddress={projectData.bondingCurveAddress || ''}
                     price={0}
                     volume={0} 

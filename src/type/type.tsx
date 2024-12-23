@@ -235,3 +235,9 @@ export interface SimpleAgent {
   overdiveLink?: string;
   createdAt: Date;
 }
+
+export interface PumpFunTokenOptions {
+  initialLiquiditySOL: number;
+  slippageBps: number; 
+  priorityFee: number;
+}

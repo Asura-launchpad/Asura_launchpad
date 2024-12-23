@@ -1,20 +1,20 @@
-import { useState } from 'react';
+// 필요한 라이브러리 및 컴포넌트 임포트
+import { useState, useEffect } from 'react';
 import styles from './createagent.module.scss';
 import Input from '../../components/cell/input';
 import ProjectImg from '../../components/cell/projectimg';
-import { UtilityList, UtilityData } from '../../components/organization/utilitylist';
-import { CryptoPay } from '../../components/organization/cryptopay';
+import { UtilityList } from '../../components/organization/utilitylist';
+import { CryptoPay } from '@/components/organization/cryptopay';
 import { BackButton } from '../../components/cell/button';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
-import { ethers } from 'ethers';
-import { ProjectFactory } from '../../contract/factory';
-import { BondingCurveContract } from '../../contract/bondingCurve';
-import { useAccount, useChains, useSwitchChain } from 'wagmi';
 import { createAgentPersona } from '@/api/agent';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { pumpDotFun } from '@/contract/pumpdotfun';
 
-// 유틸리티 가격 상수 추가
-const BASE_PRICE = 0.001; // 기본 가격
+// 가격 상수 정의
+const BASE_PRICE = 0.001;
 const UTILITY_PRICES: { [key: number]: number } = {
   1: 0.3,  // TWITTER ACCESS
   2: 0.3,  // TWITTER POST 
@@ -26,6 +26,7 @@ const UTILITY_PRICES: { [key: number]: number } = {
   8: 0     // OVERDRIVE REPLIES (SOON)
 };
 
+// 타입 정의
 interface AgentFormData {
   name: string;
   ticker: string;
@@ -42,7 +43,7 @@ interface AgentFormData {
   coverImageUrl?: string;
   profileImageUrl?: string;
   description?: string;
-  selectedUtilities: number[]; // 유틸리티 선택을 위한 필드 추가
+  selectedUtilities: number[];
   totalSupply: number;
   saleAmount: number;
   initMarketCap: number;
@@ -71,10 +72,11 @@ interface TransactionState {
   txHash?: string;
 }
 
+// 메인 컴포넌트
 const CreateAgentPage = () => {
-  const { address, isConnected } = useAccount();
-  const chains = useChains();
-  const { switchChain } = useSwitchChain();
+  // 상태 관리
+  const router = useRouter();
+  const { publicKey } = useWallet();
 
   const [formData, setFormData] = useState<AgentFormData>({
     name: '',
@@ -92,18 +94,18 @@ const CreateAgentPage = () => {
     coverImageUrl: '',
     profileImageUrl: '',
     description: '',
-    selectedUtilities: [], // 초기값 빈 배열로 설정
-    totalSupply: 1000000, // 기본 설정
-    saleAmount: 700000,   // 기본값 설정
-    initMarketCap: 10,    // 기본값 설정 (ETH)
-    endMarketCap: 100,    // 기본값 설정 (ETH)
+    selectedUtilities: [],
+    totalSupply: 1000000,
+    saleAmount: 700000,
+    initMarketCap: 10,
+    endMarketCap: 100,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [txState, setTxState] = useState<TransactionState>({ status: 'idle' });
   const [errors, setErrors] = useState<FormErrors>({});
-  const router = useRouter();
 
+  // 폼 유효성 검사
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
     
@@ -126,7 +128,7 @@ const CreateAgentPage = () => {
       newErrors.description = 'Description is required';
     }
 
-    // URL 형식 검증 (입력된 경우에만)
+    // URL 형식 검증
     const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
 
     if (formData.twitter && !urlPattern.test(formData.twitter)) {
@@ -149,56 +151,33 @@ const CreateAgentPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // 폼 제출 처리
   const handleSubmit = async () => {
-    if (isSubmitting) return;
+    if (isSubmitting || !publicKey || !validateForm()) return;
     
     try {
       setIsSubmitting(true);
       setTxState({ status: 'loading' });
 
-      if (!validateForm()) {
-        setTxState({ 
-          status: 'error', 
-          error: 'Please fill in all required fields.' 
-        });
-        return;
-      }
-
-      // 이미지 URL 설정 - 없으면 기본 이미지 사용
-      const profileImageUrl = formData.profileImageUrl || '/default_profile.png';
-      const coverImageUrl = formData.coverImageUrl || '/default_cover.png';
-
-      // 지갑 연결 확인
-      if (!isConnected || !address) {
-        throw new Error('Please connect your wallet');
-      }
-
-      // Base Sepolia 체인 확인 (84532)
-      const currentChain = chains.find(x => x.id === 84532);
-      if (!currentChain) {
-        try {
-          await switchChain({ chainId: 84532 });
-        } catch (error) {
-          throw new Error('Please switch to Base Sepolia network');
-        }
-      }
-
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const factory = new ProjectFactory(provider);
-      const tokenUri = ""; // 여기에 이미지 URL을 포함한 메타데이터를 넣어야 함
-      
-      const totalAmount = calculateTotalAmount();
-      const amountIsOut = false;
-      
-      const result = await factory.createLaunchpad(
+      // Pump.fun 토큰 발행
+      const result = await pumpDotFun.launchTokenBundle(
+        [publicKey.toString()],  // 서명자 공개키 배열
         formData.name,
-        formData.ticker,
-        tokenUri,
-        totalAmount,
-        amountIsOut
+        formData.ticker.toUpperCase(), // 티커는 대문자로 변환
+        formData.description || '',
+        formData.profileImageUrl || '',
+        {
+          twitter: formData.twitter,
+          telegram: formData.telegram,
+          website: formData.website,
+          initialAmount: formData.totalSupply,    // 총 발행량
+          buyAmount: formData.saleAmount,         // 판매량
+          slippage: 1000,                         // 10% (BPS)
+          priorityFee: 0.0001                     // Jito 수수료
+        }
       );
 
-      // API 호출하여 에이전트 생성
+      // 에이전트 페르소나 생성
       await createAgentPersona({
         name: formData.name,
         ticker: formData.ticker,
@@ -212,9 +191,8 @@ const CreateAgentPage = () => {
         overdrive: formData.overdrive,
         profileImage: formData.profileImage as File,
         coverImage: formData.coverImage as File,
-        contract_address: result.tokenAddress,
-        bonding_curve_address: result.bondingCurveAddress,
-        // utilities를 문자열 배열로 변환 (1,2,3 -> twitter, discord 등)
+        contract_address: result.mint,
+        bonding_curve_address: result.signatures[0],  // 첫 번째 서명 사용
         utilities: formData.selectedUtilities.map(id => {
           switch(id) {
             case 1: case 2: case 3: return 'twitter';
@@ -226,25 +204,24 @@ const CreateAgentPage = () => {
         }).filter(Boolean)
       });
 
-      setTxState({
-        status: 'success',
-        txHash: result.txHash
-      });
-
-      setTimeout(() => {
-        router.push(`/${result.tokenAddress}`);
-      }, 3000);
-
-    } catch (error: any) {
       setTxState({ 
-        status: 'error',
-        error: error.message || 'Failed to create token.'
+        status: 'success',
+        txHash: result.signatures[0]
+      });
+      
+      router.push(`/${result.mint}`);
+    } catch (error: any) {
+      console.error('Token launch error:', error);
+      setTxState({ 
+        status: 'error', 
+        error: error.message || '토큰 발행 중 오류가 발생했습니다'
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // 이미지 변경 처리
   const handleImageChange = (type: 'cover' | 'profile', file: File) => {
     const imageUrl = URL.createObjectURL(file);
     setFormData(prev => ({
@@ -254,7 +231,7 @@ const CreateAgentPage = () => {
     }));
   };
 
-  // 총 금액 계산 함수
+  // 총액 계산
   const calculateTotalAmount = (): number => {
     const utilityTotal = formData.selectedUtilities.reduce((sum, utilityId) => {
       return sum + (UTILITY_PRICES[utilityId] || 0);
@@ -263,6 +240,7 @@ const CreateAgentPage = () => {
     return BASE_PRICE + utilityTotal;
   };
 
+  // UI 렌더링
   return (
     <div className={styles.container}>
       <div className={styles.createform}>
@@ -311,24 +289,6 @@ const CreateAgentPage = () => {
                 setFormData({...formData, selectedUtilities: newSelected});
               }}
             />
-            {/* <Input
-              type="text" 
-              label="Personality"
-              placeholder="Kindfull"
-              required={true}
-              value={formData.personality}
-              onChange={(value) => setFormData({...formData, personality: value})}
-              error={errors.personality}
-            />
-            <Input
-              type="text"
-              label="Ton G manner"
-              placeholder="Kindfull"
-              required={true}
-              value={formData.manner}
-              onChange={(value) => setFormData({...formData, manner: value})}
-              error={errors.manner}
-            /> */}
           </div>
           
           <div className={styles.formContent}>
@@ -453,15 +413,19 @@ const CreateAgentPage = () => {
               </div>
             )}
 
-            <CryptoPay
-              amount={calculateTotalAmount()}
-              onPaymentComplete={handleSubmit}
-              onPaymentCancel={() => {
-                console.log('결제가 취소되었습니다');
-                setTxState({ status: 'idle' });
-              }}
-              disabled={isSubmitting || txState.status === 'loading'}
-            />
+            {!publicKey ? (
+              <WalletMultiButton />
+            ) : (
+              <CryptoPay
+                amount={calculateTotalAmount()}
+                onPaymentComplete={handleSubmit}
+                onPaymentCancel={() => {
+                  console.log('결제가 취소되었습니다');
+                  setTxState({ status: 'idle' });
+                }}
+                disabled={isSubmitting || txState.status === 'loading'}
+              />
+            )}
           </div>
         </div>
         
